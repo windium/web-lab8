@@ -295,3 +295,78 @@ Server running at http://localhost:3000
 [2026-11-16T18:02:19.360Z] GET /robots.txt
 [2026-11-16T18:02:19.368Z] GET /api/stats
 ```
+
+## Reasoning questions
+
+**1. Route order.** *Experiment:* I moved the 404 fallback block to the top of
+`server.js`, above the logger. Afterwards **every** request returned 404:
+`GET /` gave `Page not found: /`, `GET /hello` gave `Page not found: /hello`,
+and `GET /api/courses` and `GET /api/stats` gave `{"error":"Not found"}`. The
+terminal printed only the startup line, with no log lines at all. Express
+checks middleware and routes in the order they were registered and stops at
+the first one that sends a response. A path-less `app.use()` matches
+everything, so it answered every request before the logger, the static files
+or any real route got a chance. That is why the fallback must be registered
+last.
+
+**2. Middleware.** *Experiment:* I removed `next()` from the request logger
+and opened the page. The browser kept loading with no content until I stopped
+the server. Requesting `/hello` with curl also hung and timed out after 8
+seconds (`curl exit 28`). The server still printed a log line for each request
+(`GET /hello`, `GET /`), so the logger ran, but because it never called
+`next()` and never sent a response, the request was simply stuck: nothing
+after the logger ran and the client waited forever. A middleware must either
+send a response or call `next()`.
+
+**3. Status codes.** `201 Created` tells the client that the request
+succeeded and *created* something new (here, a subscription), while `200 OK`
+only means "it worked" and gives no information about whether a new resource
+exists. A missing page is a `404` because status codes are what browsers,
+`fetch` (`response.ok`), search engines and monitoring tools look at. A `200`
+with an error message in the body would tell all of them the page exists and
+is fine, so a search engine would index the error page and our own `app.js`
+would show it in green as a success.
+
+**4. Configuration.** The port depends on where the server runs, not on the
+code. Hosting platforms assign the port through the `PORT` environment
+variable, and on my own machine port 3000 might already be used by another
+project. Reading `process.env.PORT` with `3000` as a fallback lets the same
+code run everywhere without editing it (`PORT=8080 npm start`), while still
+working with no setup during development.
+
+**5. Dependencies.** `node_modules` can be rebuilt exactly from
+`package.json` and `package-lock.json`, it is very large (thousands of
+files), and some packages contain files built for one operating system. Since
+it is listed in `.gitignore`, a teammate must clone the repository, run
+`npm install` in the project folder (which installs the exact versions in
+`package-lock.json`), and then run `npm start` or `npm run dev`.
+
+**6. Same origin.** If `index.html` were opened directly from disk
+(`file:///.../public/index.html`), the page would no longer have an
+`http://localhost:3000` origin. The relative URL `/api/courses` would resolve
+to `file:///api/courses`, which does not exist, so every button would fail.
+Even if the URLs were changed to `http://localhost:3000/api/...`, the page and
+the API would have different origins, and the browser would block the page
+from reading the responses unless the server sent CORS headers. This
+restriction is called the **Same-Origin Policy**. CORS (Cross-Origin Resource
+Sharing) is the mechanism a server uses to relax it.
+
+## Challenges
+
+- **Plain text vs HTML.** My first `/hello` used `res.send()` with a string,
+  and `curl --include` showed `Content-Type: text/html`. I had to look up
+  `res.type()` to send real `text/plain`.
+- **Express 5 wildcard.** The `app.get('*', ...)` pattern from older
+  tutorials throws `Missing parameter name at index 1: *` in Express 5. The
+  path-less `app.use()` fallback solves this and also catches every HTTP
+  method, not only GET.
+- **Running from another folder.** `express.static('public')` resolves
+  relative to the folder the command is run from, so starting the server from
+  the parent folder broke the page. ES modules have no `__dirname`, so I used
+  `import.meta.dirname` to build an absolute path.
+- **Showing non-JSON responses.** Calling `response.json()` on the non-API
+  404 would throw, because that body is plain text. Reading the body as text
+  first and then trying `JSON.parse()` handles both cases.
+- **Deciding what to count.** The counter could have skipped static files or
+  404s, but I chose to count every request that reaches the server and placed
+  the counter before `express.static` so it sees all of them.
