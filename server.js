@@ -51,6 +51,16 @@ app.get('/api/headers', (req, res) => {
   });
 });
 
+app.post('/api/subscribe', (req, res) => {
+  // 201 Created: the request created something new (a subscription).
+  res.status(201).json({ subscribed: true });
+});
+
+app.get('/api/admin', (req, res) => {
+  // 403 Forbidden: the route exists, but the client is not allowed to use it.
+  res.status(403).json({ error: 'Forbidden' });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
