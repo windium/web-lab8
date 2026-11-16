@@ -362,8 +362,9 @@ Sharing) is the mechanism a server uses to relax it.
   method, not only GET.
 - **Running from another folder.** `express.static('public')` resolves
   relative to the folder the command is run from, so starting the server from
-  the parent folder broke the page. ES modules have no `__dirname`, so I used
-  `import.meta.dirname` to build an absolute path.
+  the parent folder would not find the page. ES modules have no `__dirname`,
+  so I looked up `import.meta.dirname` to build an absolute path, and tested
+  it by running `node web-lab8/server.js` from the parent folder.
 - **Showing non-JSON responses.** Calling `response.json()` on the non-API
   404 would throw, because that body is plain text. Reading the body as text
   first and then trying `JSON.parse()` handles both cases.
