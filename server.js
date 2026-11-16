@@ -7,6 +7,19 @@ const PORT = process.env.PORT || 3000;
 // the server was started from), so `node web-lab8/server.js` works too.
 const PUBLIC_DIR = path.join(import.meta.dirname, 'public');
 
+// All data lives here as constants: there is no database.
+// Frozen so no route can accidentally change the shared data.
+const COURSES = Object.freeze([
+  Object.freeze({ id: 1, title: 'Web Programming', credits: 6 }),
+  Object.freeze({ id: 2, title: 'Data Structures', credits: 5 }),
+  Object.freeze({ id: 3, title: 'Operating Systems', credits: 5 }),
+  Object.freeze({ id: 4, title: 'Computer Networks', credits: 4 }),
+]);
+
+const ROBOTS_TXT = `User-agent: *
+Disallow: /api/
+`;
+
 const app = express();
 
 // Number of requests served since the server started.
@@ -35,18 +48,6 @@ app.use(requestCounter);
 // ---- Static files ----
 // Serves public/index.html for GET / and the page's CSS and JS.
 app.use(express.static(PUBLIC_DIR));
-
-// All data lives here as constants: there is no database.
-const COURSES = [
-  { id: 1, title: 'Web Programming', credits: 6 },
-  { id: 2, title: 'Data Structures', credits: 5 },
-  { id: 3, title: 'Operating Systems', credits: 5 },
-  { id: 4, title: 'Computer Networks', credits: 4 },
-];
-
-const ROBOTS_TXT = `User-agent: *
-Disallow: /api/
-`;
 
 // ---- Text routes ----
 
