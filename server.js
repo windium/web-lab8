@@ -1,6 +1,11 @@
 import express from 'express';
+import path from 'node:path';
 
 const PORT = process.env.PORT || 3000;
+
+// Absolute path to public/, based on where THIS file lives (not on the folder
+// the server was started from), so `node web-lab8/server.js` works too.
+const PUBLIC_DIR = path.join(import.meta.dirname, 'public');
 
 const app = express();
 
@@ -26,6 +31,10 @@ function requestCounter(req, res, next) {
 
 app.use(requestLogger);
 app.use(requestCounter);
+
+// ---- Static files ----
+// Serves public/index.html for GET / and the page's CSS and JS.
+app.use(express.static(PUBLIC_DIR));
 
 // All data lives here as constants: there is no database.
 const COURSES = [

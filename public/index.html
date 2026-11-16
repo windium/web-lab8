@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Northbridge Software Engineering – Info Server</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Northbridge Software Engineering Programme</h1>
+    <p class="tagline">Information server · Assignment 8</p>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h2>About the programme</h2>
+      <p>
+        Northbridge's Software Engineering programme is a made-up four-year undergraduate degree
+        that teaches students how to design, build and run reliable software.
+        Courses move from programming fundamentals to web development,
+        operating systems and networks, and every year ends with a team project.
+      </p>
+      <p>
+        This page is served by a small Node.js and Express server. Use the
+        buttons below to call each API route and see exactly what the server
+        sends back.
+      </p>
+    </section>
+
+    <section class="api">
+      <h2>Try the API</h2>
+      <div class="buttons">
+        <button type="button" data-method="GET" data-url="/api/courses">GET /api/courses</button>
+        <button type="button" data-method="GET" data-url="/api/status">GET /api/status</button>
+        <button type="button" data-method="GET" data-url="/api/headers">GET /api/headers</button>
+        <button type="button" data-method="POST" data-url="/api/subscribe">POST /api/subscribe</button>
+        <button type="button" data-method="GET" data-url="/api/admin">GET /api/admin</button>
+        <button type="button" data-method="GET" data-url="/api/stats">GET /api/stats</button>
+        <button type="button" data-method="GET" data-url="/api/does-not-exist">GET /api/does-not-exist</button>
+      </div>
+
+      <div class="result">
+        <p>Status: <span id="status">–</span></p>
+        <pre id="output">Click a button to send a request.</pre>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
