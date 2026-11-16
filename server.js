@@ -4,6 +4,29 @@ const PORT = process.env.PORT || 3000;
 
 const app = express();
 
+// Number of requests served since the server started.
+// Kept in a module variable so we never add properties to req or res
+// (objects we did not create).
+let requestsServed = 0;
+
+// ---- Middleware (registered before everything else) ----
+
+// 1. Request logger: one line per request, then pass control on.
+function requestLogger(req, res, next) {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  next();
+}
+
+// 2. Request counter: counts every request that reaches the server,
+//    including static files and 404s.
+function requestCounter(req, res, next) {
+  requestsServed += 1;
+  next();
+}
+
+app.use(requestLogger);
+app.use(requestCounter);
+
 // All data lives here as constants: there is no database.
 const COURSES = [
   { id: 1, title: 'Web Programming', credits: 6 },
@@ -59,6 +82,10 @@ app.post('/api/subscribe', (req, res) => {
 app.get('/api/admin', (req, res) => {
   // 403 Forbidden: the route exists, but the client is not allowed to use it.
   res.status(403).json({ error: 'Forbidden' });
+});
+
+app.get('/api/stats', (req, res) => {
+  res.json({ requestsServed });
 });
 
 app.listen(PORT, () => {
