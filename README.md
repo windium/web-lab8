@@ -144,3 +144,154 @@ the path-matching library changed and a bare `*` is no longer a valid path.
 registered after all routes matches any request that is still unanswered, for
 every HTTP method. It checks `req.path.startsWith('/api')` to choose between
 JSON and text.
+
+## Testing evidence (curl)
+
+All output below was produced with `curl --include` against a freshly started
+server (`npm start`, port 3000), in this order. The status line and all
+response headers are shown, not only the body. The redirect was requested
+without `-L`, so curl shows the 301 itself instead of following it.
+
+### Successful JSON response (200)
+
+```text
+$ curl --include localhost:3000/api/courses
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 193
+ETag: W/"c1-CkneYHBW1SIRLixzlBuI17tD39o"
+Date: Mon, 16 Nov 2026 18:02:19 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+[{"id":1,"title":"Web Programming","credits":6},{"id":2,"title":"Data Structures","credits":5},{"id":3,"title":"Operating Systems","credits":5},{"id":4,"title":"Computer Networks","credits":4}]
+```
+
+### 201 Created
+
+```text
+$ curl --include -X POST localhost:3000/api/subscribe
+HTTP/1.1 201 Created
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 19
+ETag: W/"13-oWAPIqDXuocNexKhPYW9ayyk98c"
+Date: Mon, 16 Nov 2026 18:02:19 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+{"subscribed":true}
+```
+
+### 403 Forbidden
+
+```text
+$ curl --include localhost:3000/api/admin
+HTTP/1.1 403 Forbidden
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 21
+ETag: W/"15-TLNzmZqKxaTuFdX/dVWWPBu44/c"
+Date: Mon, 16 Nov 2026 18:02:19 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+{"error":"Forbidden"}
+```
+
+### Redirect (301)
+
+```text
+$ curl --include localhost:3000/old-page
+HTTP/1.1 301 Moved Permanently
+X-Powered-By: Express
+Location: /hello
+Vary: Accept
+Content-Type: text/plain; charset=utf-8
+Content-Length: 40
+Date: Mon, 16 Nov 2026 18:02:19 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+Moved Permanently. Redirecting to /hello
+```
+
+### 404 on an /api path (JSON)
+
+```text
+$ curl --include localhost:3000/api/does-not-exist
+HTTP/1.1 404 Not Found
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 21
+ETag: W/"15-bm7tJgu8FHlq5QU+Y6gDxOGPfRc"
+Date: Mon, 16 Nov 2026 18:02:19 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+{"error":"Not found"}
+```
+
+### 404 on a non-API path (plain text)
+
+```text
+$ curl --include localhost:3000/does-not-exist
+HTTP/1.1 404 Not Found
+X-Powered-By: Express
+Content-Type: text/plain; charset=utf-8
+Content-Length: 31
+ETag: W/"1f-k0TCbjVa+pfRfed7TWNOJ0tisV0"
+Date: Mon, 16 Nov 2026 18:02:19 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+Page not found: /does-not-exist
+```
+
+### Plain-text content type
+
+```text
+$ curl --include localhost:3000/robots.txt
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Content-Type: text/plain; charset=utf-8
+Content-Length: 30
+ETag: W/"1e-fz6IoKfWOEcSop5pxzp50fKiI7Q"
+Date: Mon, 16 Nov 2026 18:02:19 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+User-agent: *
+Disallow: /api/
+```
+
+### Request counter
+
+```text
+$ curl --include localhost:3000/api/stats
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 20
+ETag: W/"14-WJLLhLcJoemvy6FFy5g+MH2YjPc"
+Date: Mon, 16 Nov 2026 18:02:19 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+{"requestsServed":8}
+```
+
+The server printed one log line for each of these requests:
+
+```text
+Server running at http://localhost:3000
+[2026-11-16T18:02:19.300Z] GET /api/courses
+[2026-11-16T18:02:19.314Z] POST /api/subscribe
+[2026-11-16T18:02:19.324Z] GET /api/admin
+[2026-11-16T18:02:19.333Z] GET /old-page
+[2026-11-16T18:02:19.343Z] GET /api/does-not-exist
+[2026-11-16T18:02:19.352Z] GET /does-not-exist
+[2026-11-16T18:02:19.360Z] GET /robots.txt
+[2026-11-16T18:02:19.368Z] GET /api/stats
+```
