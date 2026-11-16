@@ -1,0 +1,14 @@
+{
+  "name": "web-lab8",
+  "version": "1.0.0",
+  "description": "Web Programming Fall 2026 - Assignment 8: Node.js and Express information server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module"
+}
